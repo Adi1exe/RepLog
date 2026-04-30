@@ -14,15 +14,12 @@ class User(Base):
     """Stores authentication credentials for each user."""
     __tablename__ = "users"
 
-    id              = Column(Integer, primary_key=True, index=True)
-    email           = Column(String, unique=True, index=True, nullable=False)
-    username        = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=True)  # nullable for OAuth
-    is_active       = Column(Boolean, default=True)
-    is_verified     = Column(Boolean, default=False)
-    verification_code = Column(String, nullable=True)
-    provider        = Column(String, default="local") # "local", "google", "github"
-    created_at      = Column(DateTime, default=datetime.utcnow)
+    id            = Column(Integer, primary_key=True, index=True)
+    email         = Column(String, unique=True, index=True, nullable=False)
+    username      = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    is_active     = Column(Boolean, default=True)
+    created_at    = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
     vitals   = relationship("UserVitals", back_populates="user", uselist=False)
