@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Dark mode (default) */
+  --color-void: #0a0a0a;
+  --color-surface: #111111;
+  --color-elevated: #1a1a1a;
+  --color-border: #222222;
+  --color-text-primary: #f0f0f0;
+  --color-text-secondary: #888888;
+  --color-text-muted: #444444;
+  --color-accent: #c8f23c;
+  --color-accent-hover: #b8e030;
+  --color-accent-dim: #c8f23c22;
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+}
+
+:root.light {
+  /* Light mode */
+  --color-void: #fafafa;
+  --color-surface: #ffffff;
+  --color-elevated: #f4f4f5;
+  --color-border: #e4e4e7;
+  --color-text-primary: #18181b;
+  --color-text-secondary: #52525b;
+  --color-text-muted: #a1a1aa;
+  --color-accent: #84cc16; /* slightly darker for better contrast on light mode */
+  --color-accent-hover: #65a30d;
+  --color-accent-dim: #84cc1622;
+  --color-success: #16a34a;
+  --color-danger: #dc2626;
+  --color-warning: #d97706;
+}
+
+/* ── Base resets ───────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    @apply bg-void text-text-primary font-body;
+    min-height: 100dvh;
+  }
+
+  /* Custom scrollbar — minimal dark style */
+  ::-webkit-scrollbar       { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+  
+  .custom-scrollbar::-webkit-scrollbar { height: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-text-muted/30 rounded-full hover:bg-text-muted/50; }
+
+  /* Remove number input arrows */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+}
+
+/* ── Reusable component layer ──────────────────────────────────────────────── */
+@layer components {
+  /* Card surface */
+  .card {
+    @apply bg-surface border border-border rounded-card p-5;
+  }
+
+  /* Primary input field */
+  .input {
+    @apply w-full bg-elevated border border-border rounded-btn px-4 py-2.5
+           text-text-primary placeholder-text-muted
+           focus:outline-none focus:border-accent transition-colors duration-200;
+  }
+
+  /* Primary button (accent coloured) */
+  .btn-primary {
+    @apply bg-accent text-void font-semibold rounded-btn px-5 py-2.5
+           hover:bg-accent-hover active:scale-95
+           transition-all duration-150 cursor-pointer;
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply border border-border text-text-secondary rounded-btn px-5 py-2.5
+           hover:border-accent hover:text-text-primary
+           transition-all duration-150 cursor-pointer;
+  }
+
+  /* Section label */
+  .label {
+    @apply block text-xs font-display text-text-muted uppercase tracking-widest mb-1.5;
+  }
+
+  /* Chip / badge */
+  .chip {
+    @apply inline-flex items-center gap-1.5 bg-elevated border border-border
+           rounded-full px-3 py-1 text-xs text-text-secondary;
+  }
+  .chip-active {
+    @apply bg-accent-dim border-accent text-accent;
+  }
+}
