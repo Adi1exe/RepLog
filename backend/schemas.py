@@ -45,6 +45,11 @@ class UserOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class UserUpdate(BaseModel):
+    email:    Optional[EmailStr] = None
+    username: Optional[str] = None
+
+
 # ─────────────────────────────────────────────
 #  ONBOARDING / VITALS
 # ─────────────────────────────────────────────

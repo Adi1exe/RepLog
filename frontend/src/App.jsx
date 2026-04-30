@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import Onboarding from './pages/Onboarding';
+import Profile from './pages/Profile';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -28,6 +29,11 @@ function App() {
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             } />
             <Route path="/" element={<Navigate to="/dashboard" />} />

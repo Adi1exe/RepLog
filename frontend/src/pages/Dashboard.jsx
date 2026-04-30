@@ -16,15 +16,19 @@ import WorkoutHistory     from "../components/WorkoutHistory";
 import ThemeToggle from "../components/ThemeToggle";
 
 // ── Topbar ─────────────────────────────────────────────────────────────────────
-function Topbar({ username, onLogout }) {
+function Topbar({ username, onLogout, navigate }) {
   return (
     <header className="flex items-center justify-between px-5 py-4 border-b border-border
                         bg-surface sticky top-0 z-10">
       <span className="font-display text-accent text-xl tracking-tight">RepLog</span>
       <div className="flex items-center gap-3">
-        <span className="text-text-muted text-sm hidden sm:block">
-          {username}
-        </span>
+        <button 
+          onClick={() => navigate("/profile")}
+          className="flex items-center justify-center w-8 h-8 rounded-full bg-accent-dim text-accent font-bold uppercase hover:bg-accent hover:text-void transition-colors mr-2"
+          title="View Profile Settings"
+        >
+          {username ? username.charAt(0) : "U"}
+        </button>
         <ThemeToggle />
         <button onClick={onLogout} className="btn-ghost text-xs px-3 py-1.5">
           Sign out
@@ -105,7 +109,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-void">
-      <Topbar username={user?.username} onLogout={handleLogout} />
+      <Topbar username={user?.username} onLogout={handleLogout} navigate={navigate} />
 
       <main className="max-w-xl mx-auto px-4 py-6 pb-24 space-y-6">
 
@@ -126,7 +130,7 @@ export default function Dashboard() {
 
         {/* ── Error state ── */}
         {error && (
-          <div className="card border-danger/30 text-danger text-sm">
+          <div className="card border-danger text-danger text-sm">
             {error}{" "}
             <button onClick={fetchDashboard} className="underline ml-1">Retry</button>
           </div>

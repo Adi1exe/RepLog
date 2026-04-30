@@ -19,7 +19,7 @@ function StepDots({ current, total }) {
             i === current
               ? "w-8 bg-accent"
               : i < current
-              ? "w-4 bg-accent/40"
+              ? "w-4 bg-border"
               : "w-4 bg-border"
           }`}
         />
@@ -57,7 +57,7 @@ function GoalCard({ goal, selected, onSelect, isPrimary }) {
         }`}
     >
       {isPrimary && (
-        <span className="absolute top-3 right-3 text-[10px] font-display text-accent border border-accent/40 rounded-full px-2 py-0.5 uppercase tracking-wider">
+        <span className="absolute top-3 right-3 text-[10px] font-display text-accent border border-accent rounded-full px-2 py-0.5 uppercase tracking-wider">
           Recommended
         </span>
       )}
@@ -251,7 +251,7 @@ export default function Onboarding() {
             </div>
 
             {error && (
-              <p className="text-danger text-sm bg-danger/10 border border-danger/20 rounded-btn px-3 py-2">
+              <p className="text-danger text-sm bg-surface border border-danger rounded-btn px-3 py-2">
                 {error}
               </p>
             )}
@@ -278,7 +278,7 @@ export default function Onboarding() {
                     {bmiData.bmi}
                   </p>
                 </div>
-                <span className={`chip chip-active text-sm px-3 py-1 ${bmiCfg.color} border-current bg-current/10`}>
+                <span className={`chip chip-active text-sm px-3 py-1 ${bmiCfg.color} border-current bg-surface`}>
                   {bmiData.category}
                 </span>
               </div>
@@ -341,7 +341,7 @@ export default function Onboarding() {
             </div>
 
             {error && (
-              <p className="text-danger text-sm bg-danger/10 border border-danger/20 rounded-btn px-3 py-2">
+              <p className="text-danger text-sm bg-surface border border-danger rounded-btn px-3 py-2">
                 {error}
               </p>
             )}
