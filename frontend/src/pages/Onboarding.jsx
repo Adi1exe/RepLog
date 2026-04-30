@@ -173,7 +173,7 @@ export default function Onboarding() {
     <div className="min-h-screen bg-void flex items-center justify-center px-4 py-12">
       {/* Decorative glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px]
-                      bg-accent/5 blur-3xl rounded-full pointer-events-none" />
+                      bg-accent-dim blur-3xl rounded-full pointer-events-none" />
 
       <div className="w-full max-w-md animate-fade-up">
         {/* Header */}

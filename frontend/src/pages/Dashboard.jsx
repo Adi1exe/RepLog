@@ -11,6 +11,7 @@ import StreakWidget       from "../components/StreakWidget";
 import RecentSessions     from "../components/RecentSessions";
 import WorkoutModal       from "../components/WorkoutModal";
 import ActivityHeatmap    from "../components/ActivityHeatmap";
+import WorkoutHistory     from "../components/WorkoutHistory";
 
 import ThemeToggle from "../components/ThemeToggle";
 
@@ -67,6 +68,8 @@ export default function Dashboard() {
   const [loading,    setLoading]    = useState(true);
   const [showModal,  setShowModal]  = useState(false);
   const [error,      setError]      = useState("");
+
+  const [activeTab,  setActiveTab]  = useState("overview"); // "overview" | "history"
 
   // ── Fetch dashboard data ─────────────────────────────────────────────────────
   const fetchDashboard = useCallback(async () => {
@@ -129,72 +132,103 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── Stats grid ── */}
-        {loading ? (
-          <div className="grid grid-cols-3 gap-3">
-            <Skeleton className="h-24" />
-            <Skeleton className="h-24" />
-            <Skeleton className="h-24" />
-          </div>
-        ) : stats && (
-          <div className="grid grid-cols-3 gap-3 animate-fade-up" style={{ animationDelay: "60ms" }}>
-            <StatCard
-              label="Weight"
-              value={stats.current_weight_kg ?? "—"}
-              unit="kg"
-            />
-            <StatCard
-              label="BMI"
-              value={stats.bmi ?? "—"}
-              sub={stats.bmi ? bmiLabel(stats.bmi) : ""}
-            />
-            <StatCard
-              label="Sessions"
-              value={stats.total_sessions}
-              unit="total"
-              accent
-            />
-          </div>
-        )}
-
-        {/* ── Streak widget & Heatmap ── */}
-        {loading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-32" />
-            <Skeleton className="h-40" />
-          </div>
-        ) : stats && (
-          <div className="space-y-4 animate-fade-up" style={{ animationDelay: "120ms" }}>
-            <StreakWidget streak={stats.streak} />
-            <ActivityHeatmap dates={stats.all_sessions_dates} />
-          </div>
-        )}
-
-        {/* ── Recent sessions ── */}
-        <div className="animate-fade-up" style={{ animationDelay: "180ms" }}>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-display text-sm text-text-secondary uppercase tracking-wider">
-              Recent Sessions
-            </h2>
-            {stats?.recent_sessions?.length > 0 && (
-              <span className="text-xs text-text-muted">
-                Showing last {stats.recent_sessions.length}
-              </span>
-            )}
-          </div>
-
-          {loading ? (
-            <div className="space-y-3">
-              <Skeleton className="h-28" />
-              <Skeleton className="h-28" />
-            </div>
-          ) : (
-            <RecentSessions
-              sessions={stats?.recent_sessions ?? []}
-              onDelete={handleDelete}
-            />
-          )}
+        {/* ── Tabs ── */}
+        <div className="flex bg-elevated rounded-btn p-1 border border-border">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`flex-1 py-1.5 text-sm font-medium rounded-btn transition-colors ${
+              activeTab === "overview" ? "bg-surface text-accent shadow-sm" : "text-text-muted hover:text-text-primary"
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`flex-1 py-1.5 text-sm font-medium rounded-btn transition-colors ${
+              activeTab === "history" ? "bg-surface text-accent shadow-sm" : "text-text-muted hover:text-text-primary"
+            }`}
+          >
+            History
+          </button>
         </div>
+
+        {/* ── TAB: OVERVIEW ── */}
+        {activeTab === "overview" && (
+          <div className="space-y-6">
+            {/* ── Stats grid ── */}
+            {loading ? (
+              <div className="grid grid-cols-3 gap-3">
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+              </div>
+            ) : stats && (
+              <div className="grid grid-cols-3 gap-3 animate-fade-up" style={{ animationDelay: "60ms" }}>
+                <StatCard
+                  label="Weight"
+                  value={stats.current_weight_kg ?? "—"}
+                  unit="kg"
+                />
+                <StatCard
+                  label="BMI"
+                  value={stats.bmi ?? "—"}
+                  sub={stats.bmi ? bmiLabel(stats.bmi) : ""}
+                />
+                <StatCard
+                  label="Sessions"
+                  value={stats.total_sessions}
+                  unit="total"
+                  accent
+                />
+              </div>
+            )}
+
+            {/* ── Streak widget & Heatmap ── */}
+            {loading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-32" />
+                <Skeleton className="h-40" />
+              </div>
+            ) : stats && (
+              <div className="space-y-4 animate-fade-up" style={{ animationDelay: "120ms" }}>
+                <StreakWidget streak={stats.streak} />
+                <ActivityHeatmap dates={stats.all_sessions_dates} />
+              </div>
+            )}
+
+            {/* ── Recent sessions ── */}
+            <div className="animate-fade-up" style={{ animationDelay: "180ms" }}>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-display text-sm text-text-secondary uppercase tracking-wider">
+                  Recent Sessions
+                </h2>
+                {stats?.recent_sessions?.length > 0 && (
+                  <span className="text-xs text-text-muted">
+                    Showing last {stats.recent_sessions.length}
+                  </span>
+                )}
+              </div>
+
+              {loading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-28" />
+                  <Skeleton className="h-28" />
+                </div>
+              ) : (
+                <RecentSessions
+                  sessions={stats?.recent_sessions ?? []}
+                  onDelete={handleDelete}
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB: HISTORY ── */}
+        {activeTab === "history" && (
+          <WorkoutHistory onDelete={handleDelete} />
+        )}
+
       </main>
 
       {/* ── Floating Action Button ── */}
