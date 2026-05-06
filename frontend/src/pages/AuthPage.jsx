@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from "../context/AuthContext";
-import { login as apiLogin, register as apiRegister } from "../api/auth";
+import { login as apiLogin, register as apiRegister, oauthLogin } from "../api/auth";
 
 export default function AuthPage({ mode }) {
   const isLogin    = mode === "login";
@@ -26,7 +27,11 @@ export default function AuthPage({ mode }) {
       const fn   = isLogin ? apiLogin : apiRegister;
       const { data } = await fn(form);
       login(data);   // persist token + user info in AuthContext
-      navigate(data.has_vitals ? "/dashboard" : "/onboarding");
+      if (!data.is_email_verified) {
+        navigate("/verify-email", { state: { email: form.email } });
+      } else {
+        navigate(data.has_vitals ? "/dashboard" : "/onboarding");
+      }
     } catch (err) {
       const detail = err.response?.data?.detail;
       let msg = "Something went wrong. Please try again.";
@@ -40,6 +45,38 @@ export default function AuthPage({ mode }) {
       setLoading(false);
     }
   };
+
+  const handleGithubLogin = () => {
+    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+    if (!clientId) {
+      setError("GitHub Client ID is not configured in .env");
+      return;
+    }
+    const redirectUri = `${window.location.origin}/auth/github/callback`;
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user:email`;
+  };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      setError("");
+      try {
+        const token = tokenResponse.access_token;
+        const { data } = await oauthLogin({ provider: "google", token });
+        login(data);
+        if (!data.is_email_verified) {
+          navigate("/verify-email", { state: { email: data.email || "" } });
+        } else {
+          navigate(data.has_vitals ? "/dashboard" : "/onboarding");
+        }
+      } catch (err) {
+        setError("Failed to authenticate with Google.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => setError("Google Login Failed"),
+  });
 
   return (
     <div className="min-h-screen bg-void flex items-center justify-center px-4">
@@ -122,6 +159,34 @@ export default function AuthPage({ mode }) {
               {loading ? "Please wait…" : isLogin ? "Sign In" : "Create Account"}
             </button>
           </form>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-background-light"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-surface text-text-muted">Or continue with</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              type="button"
+              onClick={() => googleLogin()}
+              disabled={loading}
+              className="flex items-center justify-center py-2 px-4 border border-background-light rounded-btn hover:bg-background-light transition-colors text-text-primary disabled:opacity-50"
+            >
+              Google
+            </button>
+            <button
+              type="button"
+              onClick={() => handleGithubLogin()}
+              disabled={loading}
+              className="flex items-center justify-center py-2 px-4 border border-background-light rounded-btn hover:bg-background-light transition-colors text-text-primary disabled:opacity-50"
+            >
+              GitHub
+            </button>
+          </div>
         </div>
 
         {/* Toggle link */}

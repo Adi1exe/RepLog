@@ -33,6 +33,7 @@ class TokenResponse(BaseModel):
     token_type:   str = "bearer"
     username:     str
     has_vitals:   bool  # tells frontend whether to show onboarding
+    is_email_verified: bool = False
 
 
 class UserOut(BaseModel):
@@ -40,6 +41,7 @@ class UserOut(BaseModel):
     email:      str
     username:   str
     is_active:  bool
+    is_email_verified: bool
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -49,6 +51,19 @@ class UserUpdate(BaseModel):
     email:    Optional[EmailStr] = None
     username: Optional[str] = None
 
+
+class VerifyEmail(BaseModel):
+    email: EmailStr
+    code: str
+
+
+class ResendVerification(BaseModel):
+    email: EmailStr
+
+
+class OAuthLogin(BaseModel):
+    provider: str # "google" or "github"
+    token: str    # The OAuth token from frontend
 
 # ─────────────────────────────────────────────
 #  ONBOARDING / VITALS

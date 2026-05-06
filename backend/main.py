@@ -3,6 +3,10 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from backend.core.database import engine, Base
 from backend.routers import auth, onboarding, workouts
