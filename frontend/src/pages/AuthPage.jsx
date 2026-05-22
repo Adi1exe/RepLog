@@ -141,7 +141,7 @@ export default function AuthPage({ mode }) {
                 placeholder="••••••••"
                 className="input"
                 required
-                minLength="6"
+                minLength="12"
               />
             </div>
 

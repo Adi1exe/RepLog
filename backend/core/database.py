@@ -1,27 +1,38 @@
-# core/database.py — Database engine and session factory
+"""MongoDB client and collection dependencies."""
 
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+import os
+from functools import lru_cache
 
-# SQLite for local dev — swap the URL for PostgreSQL in production:
-# postgresql://user:password@host/dbname
-SQLALCHEMY_DATABASE_URL = "sqlite:///./workout_tracker.db"
+from pymongo import ASCENDING, DESCENDING, MongoClient
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False}  # required for SQLite only
-)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+DEFAULT_MONGO_URI = "mongodb://localhost:27017"
+DEFAULT_DATABASE_NAME = "replog"
 
-Base = declarative_base()
+
+@lru_cache
+def get_client() -> MongoClient:
+    uri = os.getenv("MONGO_URI", DEFAULT_MONGO_URI)
+    return MongoClient(uri, serverSelectionTimeoutMS=5000)
+
+
+def get_database():
+    database_name = os.getenv("MONGO_DATABASE", DEFAULT_DATABASE_NAME)
+    return get_client()[database_name]
 
 
 def get_db():
-    """FastAPI dependency that yields a database session per request."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    """FastAPI dependency that yields the configured Mongo database."""
+    return get_database()
+
+
+def configure_indexes() -> None:
+    """Create indexes required for auth uniqueness and dashboard queries."""
+    db = get_database()
+    db.users.create_index([("email", ASCENDING)], unique=True)
+    db.users.create_index([("username", ASCENDING)], unique=True)
+    db.users.create_index([("provider", ASCENDING), ("provider_id", ASCENDING)])
+    db.user_vitals.create_index([("user_id", ASCENDING)], unique=True)
+    db.workout_sessions.create_index(
+        [("user_id", ASCENDING), ("date", DESCENDING)]
+    )

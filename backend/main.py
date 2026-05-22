@@ -1,37 +1,43 @@
-# main.py — FastAPI application entry point
-# Run with: uvicorn backend.main:app --reload
+"""FastAPI application entry point."""
 
+import os
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
-from backend.core.database import engine, Base
+from backend.core.database import configure_indexes
 from backend.routers import auth, onboarding, workouts
 
-# ── Create all tables on startup ───────────────────────────────────────────────
-# In production, replace this with Alembic migrations.
-Base.metadata.create_all(bind=engine)
 
-# ── App instance ───────────────────────────────────────────────────────────────
 app = FastAPI(
     title="Workout Tracker API",
     version="1.0.0",
-    description="Backend for the sleek workout tracking application",
+    description="Backend for RepLog workout tracking",
 )
 
-# ── CORS — allow the Vite dev server ──────────────────────────────────────────
+
+@app.on_event("startup")
+def startup():
+    configure_indexes()
+
+
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],   # Vite default port
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ── Register routers ───────────────────────────────────────────────────────────
 app.include_router(auth.router)
 app.include_router(onboarding.router)
 app.include_router(workouts.router)

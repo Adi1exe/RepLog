@@ -18,8 +18,8 @@ class UserRegister(BaseModel):
     @field_validator("password")
     @classmethod
     def password_min_length(cls, v):
-        if len(v) < 6:
-            raise ValueError("Password must be at least 6 characters")
+        if len(v) < 12:
+            raise ValueError("Password must be at least 12 characters")
         return v
 
 
@@ -37,7 +37,7 @@ class TokenResponse(BaseModel):
 
 
 class UserOut(BaseModel):
-    id:         int
+    id:         str
     email:      str
     username:   str
     is_active:  bool
@@ -87,8 +87,8 @@ class VitalsCreate(BaseModel):
 
 
 class VitalsOut(BaseModel):
-    id:         int
-    user_id:    int
+    id:         str
+    user_id:    str
     name:       str
     age:        int
     height_cm:  float
@@ -120,8 +120,8 @@ class ExerciseCreate(BaseModel):
 
 
 class ExerciseOut(ExerciseCreate):
-    id:         int
-    session_id: int
+    id:         str
+    session_id: str
 
     model_config = {"from_attributes": True}
 
@@ -148,8 +148,8 @@ class WorkoutSessionCreate(BaseModel):
 
 
 class WorkoutSessionOut(BaseModel):
-    id:           int
-    user_id:      int
+    id:           str
+    user_id:      str
     date:         datetime
     duration_min: int
     body_parts:   List[str]

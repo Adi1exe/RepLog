@@ -1,199 +1,135 @@
-# RepLog — Workout Tracker
+# RepLog - Workout Tracker
 
-A full-stack workout tracking application built with **FastAPI** + **Vite/React**.
-
----
+A full-stack workout tracking application built with FastAPI, MongoDB, and Vite/React.
 
 ## Tech Stack
 
-| Layer      | Technology                                      |
-|------------|-------------------------------------------------|
-| Frontend   | Vite + React 18, Tailwind CSS, Axios, React Router |
-| Backend    | Python 3.11+, FastAPI, SQLAlchemy, Pydantic     |
-| Database   | SQLite (dev) → PostgreSQL-ready                 |
-| Auth       | JWT (python-jose) + bcrypt password hashing     |
-
----
+| Layer | Technology |
+| --- | --- |
+| Frontend | Vite + React 18, Tailwind CSS, Axios, React Router |
+| Backend | Python 3.11+, FastAPI, PyMongo, Pydantic |
+| Database | MongoDB |
+| Auth | JWT, bcrypt password hashing, email verification, Google/GitHub OAuth |
 
 ## Project Structure
 
-```
-workout-tracker/
-├── backend/
-│   ├── core/
-│   │   ├── database.py       # SQLAlchemy engine + session factory
-│   │   └── security.py       # JWT helpers, password hashing, auth dependency
-│   ├── routers/
-│   │   ├── auth.py           # POST /auth/register, /auth/login
-│   │   ├── onboarding.py     # POST /onboarding/vitals, /onboarding/bmi-suggest
-│   │   └── workouts.py       # CRUD /workouts/, GET /workouts/dashboard
-│   ├── models.py             # SQLAlchemy ORM: User, UserVitals, WorkoutSession, WorkoutExercise
-│   ├── schemas.py            # Pydantic request/response schemas
-│   ├── main.py               # FastAPI app entry point, CORS, router registration
-│   └── requirements.txt
-│
-└── frontend/
-    ├── public/
-    ├── src/
-    │   ├── api/
-    │   │   ├── client.js     # Axios instance with JWT interceptor
-    │   │   ├── auth.js       # register / login calls
-    │   │   └── workouts.js   # vitals, workout CRUD, dashboard
-    │   ├── components/
-    │   │   ├── StatCard.jsx       # Reusable metric widget
-    │   │   ├── StreakWidget.jsx    # SVG ring streak counter
-    │   │   ├── RecentSessions.jsx # Activity feed with delete
-    │   │   └── WorkoutModal.jsx   # Dynamic workout entry form
-    │   ├── context/
-    │   │   └── AuthContext.jsx    # Global auth state + localStorage sync
-    │   ├── pages/
-    │   │   ├── AuthPage.jsx       # Login + Register
-    │   │   ├── Onboarding.jsx     # 3-step vitals + goal + experience flow
-    │   │   └── Dashboard.jsx      # Main stats + streak + feed + FAB
-    │   ├── App.jsx                # Route definitions + guards
-    │   ├── main.jsx               # React entry point
-    │   └── index.css              # Tailwind directives + component layer
-    ├── index.html
-    ├── tailwind.config.js         # #0a0a0a base + accent palette
-    ├── vite.config.js             # Dev proxy to FastAPI
-    └── package.json
-```
+```text
+backend/
+  core/
+    database.py      # MongoDB client, dependency, and production indexes
+    security.py      # JWT, password hashing, current-user dependency
+  routers/
+    auth.py          # Register, login, verification, OAuth, profile
+    onboarding.py    # Vitals, BMI suggestions
+    workouts.py      # Workout CRUD, dashboard, persisted progress/streaks
+  schemas.py
+  main.py
+  requirements.txt
 
----
+frontend/
+  src/
+    api/
+    components/
+    context/
+    pages/
+  package.json
+```
 
 ## Quick Start
 
-### 1 — Backend
+### Backend
 
 ```bash
-cd workout-tracker/backend
-
-# Create and activate a virtual environment
+cd backend
 python -m venv venv
-source venv/bin/activate          # Windows: venv\Scripts\activate
-
-# Install dependencies
+venv\Scripts\activate
 pip install -r requirements.txt
-
-# Start the development server (auto-reloads on save)
 uvicorn backend.main:app --reload
 ```
 
-The API will be live at **http://localhost:8000**  
-Interactive docs: **http://localhost:8000/docs**
+The API runs at `http://localhost:8000`.
+Interactive docs are available at `http://localhost:8000/docs`.
 
-> **Note:** The SQLite database file (`workout_tracker.db`) is created automatically
-> in the `backend/` directory on first run. No setup required.
+MongoDB must be running and reachable through `MONGO_URI`. For local development, the default is `mongodb://localhost:27017` with database `replog`.
 
----
-
-### 2 — Frontend
+### Frontend
 
 ```bash
-cd workout-tracker/frontend
-
-# Install node dependencies
+cd frontend
 npm install
-
-# Start the Vite dev server
 npm run dev
 ```
 
-The app will be live at **http://localhost:5173**
-
-Vite proxies all `/auth`, `/onboarding`, and `/workouts` requests to the FastAPI
-backend automatically — no manual CORS configuration needed during development.
-
----
+The app runs at `http://localhost:5173`.
 
 ## Environment Variables
 
-For production deployments, set these environment variables on your server:
+| Variable | Default | Description |
+| --- | --- | --- |
+| `ENVIRONMENT` | `development` | Set to `production` to enforce production safety checks |
+| `SECRET_KEY` | dev fallback only | JWT signing secret; required in production and must be 32+ chars |
+| `MONGO_URI` | `mongodb://localhost:27017` | MongoDB connection string |
+| `MONGO_DATABASE` | `replog` | MongoDB database name |
+| `CORS_ORIGINS` | `http://localhost:5173` | Comma-separated allowed frontend origins |
+| `JWT_ISSUER` | `replog-api` | JWT issuer claim |
+| `JWT_AUDIENCE` | `replog-web` | JWT audience claim |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `60` | Access token lifetime |
+| `COOKIE_SAMESITE` | `lax` | Auth cookie SameSite policy |
+| `SMTP_EMAIL` | unset | Enables real verification emails |
+| `SMTP_PASSWORD` | unset | SMTP password/app password |
+| `SMTP_HOST` | `smtp.gmail.com` | SMTP host |
+| `SMTP_PORT` | `465` | SMTP SSL port |
+| `VERIFICATION_CODE_SECRET` | `SECRET_KEY` | HMAC secret for stored verification-code hashes |
+| `VERIFICATION_CODE_TTL_MINUTES` | `15` | Verification code expiration |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | unset | GitHub OAuth credentials |
 
-| Variable     | Default (dev)                      | Description                         |
-|--------------|------------------------------------|-------------------------------------|
-| `SECRET_KEY` | `change-me-in-production-please`   | JWT signing secret — **change this!** |
+Production example:
 
 ```bash
-# Example (Linux/macOS)
-export SECRET_KEY="your-super-secret-random-string-here"
+set ENVIRONMENT=production
+set SECRET_KEY=your-super-secret-random-string-at-least-32-chars
+set MONGO_URI=mongodb+srv://user:password@cluster.example/replog
+set CORS_ORIGINS=https://your-frontend.example
 uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ```
 
----
-
-## Migrating to PostgreSQL
-
-1. Install the async driver:
-   ```bash
-   pip install psycopg2-binary
-   ```
-
-2. Update `DATABASE_URL` in `backend/core/database.py`:
-   ```python
-   SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost/replog"
-   ```
-
-3. Remove the `connect_args` kwarg (SQLite-only):
-   ```python
-   engine = create_engine(SQLALCHEMY_DATABASE_URL)
-   ```
-
-4. Install and configure [Alembic](https://alembic.sqlalchemy.org/) for proper
-   schema migrations in production.
-
----
-
-## API Reference
+## API Summary
 
 ### Auth
-| Method | Endpoint          | Body                              | Returns          |
-|--------|-------------------|-----------------------------------|------------------|
-| POST   | `/auth/register`  | `{email, username, password}`     | `TokenResponse`  |
-| POST   | `/auth/login`     | `{email, password}`               | `TokenResponse`  |
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/auth/register` | Create account and send verification code |
+| `POST` | `/auth/login` | Login with email/password |
+| `POST` | `/auth/verify-email` | Verify email with a code |
+| `POST` | `/auth/resend-verification` | Send a fresh verification code |
+| `POST` | `/auth/oauth` | Google/GitHub OAuth login |
+| `POST` | `/auth/logout` | Clear the HTTP-only auth cookie |
+| `GET` | `/auth/me` | Current user profile |
+| `PUT` | `/auth/me` | Update username/email |
 
 ### Onboarding
-| Method | Endpoint                      | Auth | Description                      |
-|--------|-------------------------------|------|----------------------------------|
-| POST   | `/onboarding/bmi-suggest`     | ✓    | Returns BMI + suggested goals    |
-| POST   | `/onboarding/vitals`          | ✓    | Save/update user vitals          |
-| GET    | `/onboarding/vitals`          | ✓    | Fetch current user's vitals      |
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/onboarding/bmi-suggest` | Calculate BMI and suggested goals |
+| `POST` | `/onboarding/vitals` | Upsert vitals/profile |
+| `GET` | `/onboarding/vitals` | Fetch current vitals |
 
 ### Workouts
-| Method | Endpoint               | Auth | Description                          |
-|--------|------------------------|------|--------------------------------------|
-| POST   | `/workouts/`           | ✓    | Log a new workout session            |
-| GET    | `/workouts/`           | ✓    | List sessions (paginated)            |
-| GET    | `/workouts/dashboard`  | ✓    | Stats + streak + recent sessions     |
-| DELETE | `/workouts/{id}`       | ✓    | Delete a session                     |
 
----
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/workouts/` | Log a workout session |
+| `GET` | `/workouts/` | List workout history |
+| `GET` | `/workouts/dashboard` | Dashboard stats, progress, streak, recent sessions |
+| `DELETE` | `/workouts/{id}` | Delete a workout session |
 
-## Key Design Decisions
+## Production Notes
 
-### Streak Logic
-The streak counter in `routers/workouts.py → _calculate_streak()` works as follows:
-- Sessions are deduplicated to one entry per **calendar date**
-- Walking backwards from today, the streak increments for each date with a session
-- If a **gap > 72 hours (3 days)** is found between any two consecutive workout dates, the walk stops and the streak resets
-- If the most-recent session itself is older than 72 h, the streak is immediately `0`
-
-### BMI Goal Suggestions
-`routers/onboarding.py → _suggest_goals()` maps BMI category to an ordered list of
-goals. The first item is the primary recommendation shown highlighted in the UI:
-
-| BMI Category  | Suggested Goals (ordered)                       |
-|---------------|-------------------------------------------------|
-| Underweight   | Muscle Gain → Maintenance → Strength            |
-| Normal        | Maintenance → Muscle Gain → Fat Loss → Strength |
-| Overweight    | Fat Loss → Maintenance → Muscle Gain            |
-| Obese         | Fat Loss → Maintenance                          |
-
-### JWT Strategy
-- Tokens are signed with HS256 and expire after **7 days**
-- The Axios interceptor in `api/client.js` attaches the token to every request
-- A `401` response from any endpoint triggers an automatic logout + redirect to `/login`
-
-### Relational Data
-`WorkoutSession` → `WorkoutExercise` is a true one-to-many with `cascade="all, delete-orphan"`,
-so deleting a session also removes all its exercises in a single DB call.
+- Runtime persistence is MongoDB-backed; SQLite is no longer used by the backend.
+- `user_progress` stores derived progress and streak state. It is rebuilt after workout changes and when the dashboard is requested.
+- MongoDB indexes are created at startup for unique users, one vitals record per user, and workout history sorting.
+- Verification codes are stored as HMAC hashes and expire by default after 15 minutes.
+- Production startup fails if `SECRET_KEY` is missing or too short.
+- Browser sessions use an HTTP-only `access_token` cookie. Bearer tokens are still accepted for API clients.

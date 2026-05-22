@@ -51,7 +51,7 @@ export default function Profile() {
     setSuccess("");
 
     try {
-      await Promise.all([
+      const [accountRes] = await Promise.all([
         updateMe(account),
         submitVitals({
           name: vitals.name,
@@ -63,10 +63,7 @@ export default function Profile() {
         })
       ]);
       setSuccess("Profile updated successfully!");
-      // Update global context username if it changed
-      if (user.username !== account.username) {
-        login({ ...user, username: account.username });
-      }
+      login({ ...user, ...accountRes.data });
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to update profile.");
     } finally {
