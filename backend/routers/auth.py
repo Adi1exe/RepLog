@@ -1,9 +1,8 @@
-"""User registration, login, verification, OAuth, and profile endpoints."""
-
 import hashlib
 import hmac
 import os
 import random
+import secrets
 import smtplib
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
@@ -66,9 +65,8 @@ def _token_response(db: Database, user: dict, response: Response) -> schemas.Tok
         is_email_verified=user.get("is_email_verified", False),
     )
 
-
 def generate_verification_code() -> str:
-    return str(random.randint(100000, 999999))
+    return "".join(secrets.choice("0123456789") for _ in range(6))
 
 
 def _hash_code(code: str) -> str:
@@ -253,8 +251,18 @@ async def oauth_login(payload: schemas.OAuthLogin, response: Response, db: Datab
                     "https://api.github.com/user/emails",
                     headers={"Authorization": f"Bearer {access_token}"},
                 )
-                emails = eresp.json()
-                email = next((e["email"] for e in emails if e.get("primary")), emails[0]["email"])
+                if eresp.status_code == 200:
+                    emails = eresp.json()
+                    if isinstance(emails, list) and len(emails) > 0:
+                        email = next(
+                            (e["email"] for e in emails if isinstance(e, dict) and e.get("primary")),
+                            emails[0].get("email") if isinstance(emails[0], dict) else None
+                        )
+                if not email:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Could not retrieve primary email from GitHub profile"
+                    )
             email = email.lower()
             provider_id = str(data["id"])
             username = data["login"]
@@ -264,22 +272,36 @@ async def oauth_login(payload: schemas.OAuthLogin, response: Response, db: Datab
     user = db.users.find_one({"email": email})
     if not user:
         candidate_username = username
-        if db.users.find_one({"username": candidate_username}):
-            candidate_username = f"{candidate_username}_{random.randint(1000, 9999)}"
-
-        result = db.users.insert_one(
-            {
-                "email": email,
-                "username": candidate_username,
-                "hashed_password": None,
-                "is_active": True,
-                "created_at": _now(),
-                "provider": payload.provider,
-                "provider_id": provider_id,
-                "is_email_verified": True,
-            }
-        )
-        user = db.users.find_one({"_id": result.inserted_id})
+        inserted = False
+        for attempt in range(5):
+            try:
+                result = db.users.insert_one(
+                    {
+                        "email": email,
+                        "username": candidate_username,
+                        "hashed_password": None,
+                        "is_active": True,
+                        "created_at": _now(),
+                        "provider": payload.provider,
+                        "provider_id": provider_id,
+                        "is_email_verified": True,
+                    }
+                )
+                user = db.users.find_one({"_id": result.inserted_id})
+                inserted = True
+                break
+            except DuplicateKeyError:
+                if db.users.find_one({"email": email}):
+                    user = db.users.find_one({"email": email})
+                    inserted = True
+                    break
+                candidate_username = f"{username}_{random.randint(1000, 9999)}"
+        
+        if not inserted:
+            raise HTTPException(
+                status_code=500,
+                detail="Could not register user due to persistent username collision. Please try again."
+            )
     elif not user.get("provider"):
         db.users.update_one(
             {"_id": user["_id"]},
