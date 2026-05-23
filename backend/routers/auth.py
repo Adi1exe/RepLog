@@ -245,25 +245,18 @@ async def oauth_login(payload: schemas.OAuthLogin, response: Response, db: Datab
                 "User-Agent": "RepLog-App",
                 "Accept": "application/vnd.github.v3+json",
             }
-            print("GITHUB ACCESS TOKEN:", access_token[:8] + "...")
             resp = await client.get("https://api.github.com/user", headers=headers)
-            print("GITHUB PROFILE RESPONSE STATUS:", resp.status_code)
-            print("GITHUB PROFILE RESPONSE BODY:", resp.text)
             if resp.status_code != 200:
                 raise HTTPException(status_code=400, detail="Failed to fetch GitHub profile")
             data = resp.json()
 
             email = data.get("email")
-            print("GITHUB PROFILE EMAIL:", email)
             if not email:
                 eresp = await client.get(
                     "https://api.github.com/user/emails",
                     headers=headers,
                 )
-                print("GITHUB EMAILS RESPONSE STATUS:", eresp.status_code)
-                print("GITHUB EMAILS RESPONSE BODY:", eresp.text)
                 if eresp.status_code == 200:
-                    emails = eresp.json()
                     emails = eresp.json()
                     if isinstance(emails, list) and len(emails) > 0:
                         email = next(
