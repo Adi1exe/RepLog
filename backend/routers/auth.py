@@ -240,7 +240,12 @@ async def oauth_login(payload: schemas.OAuthLogin, response: Response, db: Datab
                 raise HTTPException(status_code=400, detail=token_data.get("error_description", "Invalid code"))
 
             access_token = token_data["access_token"]
-            resp = await client.get("https://api.github.com/user", headers={"Authorization": f"Bearer {access_token}"})
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                "User-Agent": "RepLog-App",
+                "Accept": "application/vnd.github.v3+json",
+            }
+            resp = await client.get("https://api.github.com/user", headers=headers)
             if resp.status_code != 200:
                 raise HTTPException(status_code=400, detail="Failed to fetch GitHub profile")
             data = resp.json()
@@ -249,7 +254,7 @@ async def oauth_login(payload: schemas.OAuthLogin, response: Response, db: Datab
             if not email:
                 eresp = await client.get(
                     "https://api.github.com/user/emails",
-                    headers={"Authorization": f"Bearer {access_token}"},
+                    headers=headers,
                 )
                 if eresp.status_code == 200:
                     emails = eresp.json()
