@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { oauthLogin } from "../api/auth";
@@ -8,8 +8,12 @@ export default function GithubCallback() {
   const location = useLocation();
   const { login } = useAuth();
   const [error, setError] = useState("");
+  const called = useRef(false);
 
   useEffect(() => {
+    if (called.current) return;
+    called.current = true;
+
     const handleCallback = async () => {
       const params = new URLSearchParams(location.search);
       const code = params.get("code");
