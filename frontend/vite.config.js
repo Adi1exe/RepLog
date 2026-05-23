@@ -5,7 +5,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/auth': 'http://localhost:8000',
+      '/auth': {
+        target: 'http://localhost:8000',
+        bypass: (req, res, proxyOptions) => {
+          if (req.url.startsWith('/auth/github/callback')) {
+            return req.url;
+          }
+        }
+      },
       '/onboarding': 'http://localhost:8000',
       '/workouts': 'http://localhost:8000',
     }
