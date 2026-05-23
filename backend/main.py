@@ -6,7 +6,9 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# Load environment variables from .env file
 load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 from backend.core.database import configure_indexes
 from backend.routers import auth, onboarding, workouts

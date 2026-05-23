@@ -3,6 +3,7 @@
 import os
 from functools import lru_cache
 
+import certifi
 from pymongo import ASCENDING, DESCENDING, MongoClient
 
 
@@ -13,6 +14,8 @@ DEFAULT_DATABASE_NAME = "replog"
 @lru_cache
 def get_client() -> MongoClient:
     uri = os.getenv("MONGO_URI", DEFAULT_MONGO_URI)
+    if "mongodb.net" in uri or "srv" in uri:
+        return MongoClient(uri, serverSelectionTimeoutMS=5000, tlsCAFile=certifi.where())
     return MongoClient(uri, serverSelectionTimeoutMS=5000)
 
 
